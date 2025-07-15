@@ -8,12 +8,15 @@ Une plateforme web moderne permettant aux conducteurs de renouveler leur assuran
 - [Technologies utilisées](#-technologies-utilisées)
 - [Prérequis](#-prérequis)
 - [Installation](#-installation)
-- [Configuration](#-configuration)
+- [Configuration avec Docker](#-configuration-avec-docker)
+- [Variables d'environnement](#-variables-denvironnement)
 - [Démarrage](#-démarrage)
 - [Structure du projet](#-structure-du-projet)
 - [API Documentation](#-api-documentation)
 - [Comptes par défaut](#-comptes-par-défaut)
 - [Déploiement](#-déploiement)
+- [Support](#-support)
+- [Licence](#-licence)
 
 ## 🚀 Fonctionnalités
 
@@ -42,333 +45,221 @@ Une plateforme web moderne permettant aux conducteurs de renouveler leur assuran
 ## 🛠 Technologies utilisées
 
 ### Frontend
-- **React 18** avec TypeScript
-- **Vite** pour le build et dev server
-- **Tailwind CSS** pour le styling
-- **React Router** pour la navigation
-- **React Hook Form** pour les formulaires
-- **Axios** pour les appels API
-- **Lucide React** pour les icônes
+- React 18 avec TypeScript
+- Vite
+- Tailwind CSS
+- React Router
+- React Hook Form
+- Axios
+- Lucide React
 
 ### Backend
-- **Node.js** avec Express
-- **MySQL** pour la base de données
-- **JWT** pour l'authentification
-- **Multer** pour l'upload de fichiers
-- **bcryptjs** pour le hachage des mots de passe
-- **CORS** pour les requêtes cross-origin
+- Node.js avec Express
+- MySQL via Docker
+- JWT
+- Multer
+- bcryptjs
+- CORS
 
 ### Paiement
-- **FedaPay** (intégration prête)
+- FedaPay
 
-## 📋 Prérequis
+## 📦 Prérequis
 
-Avant de commencer, assurez-vous d'avoir installé :
+- Node.js (v16+)
+- Docker & Docker Compose
+- Git
 
-- **Node.js** (version 16 ou supérieure)
-- **npm** ou **yarn**
-- **MySQL** (version 8.0 ou supérieure)
-- **Git**
+## 📥 Installation
 
-## 🔧 Installation
-
-1. **Cloner le projet**
 ```bash
 git clone <url-du-repo>
 cd insurance-renewal-platform
-```
-
-2. **Installer les dépendances**
-```bash
 npm install
-```
-
-3. **Créer les dossiers nécessaires**
-```bash
 mkdir -p server/uploads/certificates
 ```
 
-## ⚙️ Configuration
+## ⚙️ Configuration avec Docker
 
-### 1. Installation et configuration de MySQL
+### Lancer les services MySQL et phpMyAdmin
 
-#### Sur Ubuntu/Debian :
 ```bash
-# Installer MySQL
-sudo apt update
-sudo apt install mysql-server
-
-# Démarrer MySQL
-sudo systemctl start mysql
-sudo systemctl enable mysql
-
-# Configuration sécurisée (optionnel)
-sudo mysql_secure_installation
+docker-compose -f docker-compose.mysql.yml up -d
 ```
 
-#### Sur macOS :
-```bash
-# Avec Homebrew
-brew install mysql
-brew services start mysql
-```
+Cela démarre :
 
-#### Sur Windows :
-1. Télécharger MySQL depuis [mysql.com](https://dev.mysql.com/downloads/mysql/)
-2. Installer et démarrer le service MySQL
+- MySQL (port : 3307)
+- phpMyAdmin (port : 8080)
 
-### 2. Configuration de la base de données
+### Accès à phpMyAdmin
 
-1. **Se connecter à MySQL**
-```bash
-mysql -u root -p
-```
+| Clé        | Valeur             |
+|------------|--------------------|
+| URL        | http://localhost:8080 |
+| Serveur    | mysql              |
+| Login      | admin              |
+| Password   | admin              |
 
-2. **Créer la base de données**
-```sql
-CREATE DATABASE insurance_platform;
-EXIT;
-```
+### Importer la base de données
 
-3. **Importer le schéma**
-```bash
-mysql -u root -p insurance_platform < supabase/migrations/20250703125359_holy_tooth.sql
-```
+- Ouvrir phpMyAdmin
+- Sélectionner `insurance_platform`
+- Onglet "Importer"
+- Fichier SQL : `supabase/migrations/20250703125359_holy_tooth.sql`
 
-### 3. Variables d'environnement
+## 🔐 Variables d'environnement
 
-Le fichier `.env` est déjà configuré. **Modifiez uniquement le mot de passe MySQL** :
+Créer un fichier `.env` :
 
 ```env
-# Base de données MySQL
 DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=VOTRE_MOT_DE_PASSE_MYSQL_ICI
+DB_PORT=3307
+DB_USER=admin
+DB_PASSWORD=admin
 DB_NAME=insurance_platform
 
-# JWT Secret (changez en production)
-JWT_SECRET=your_super_secret_jwt_key_here
+JWT_SECRET=your_jwt_secret
 
-# FedaPay Configuration
 FEDAPAY_PUBLIC_KEY=your_fedapay_public_key
 FEDAPAY_SECRET_KEY=your_fedapay_secret_key
 FEDAPAY_WEBHOOK_SECRET=your_fedapay_webhook_secret
 
-# Server Configuration
 PORT=3001
 NODE_ENV=development
 
-# Frontend URL
 FRONTEND_URL=http://localhost:5173
 ```
 
-## 🚀 Démarrage
+## ▶️ Démarrage
 
-### ⚠️ IMPORTANT : Vérifier MySQL avant de démarrer
+### Backend
 
-```bash
-# Vérifier que MySQL fonctionne
-sudo systemctl status mysql
-
-# Si MySQL n'est pas démarré
-sudo systemctl start mysql
-
-# Tester la connexion
-mysql -u root -p -e "SELECT 1;"
-```
-
-### Option 1: Démarrage simultané (Recommandé)
-```bash
-npm run dev
-```
-Cette commande démarre automatiquement :
-- **Backend** sur `http://localhost:3001`
-- **Frontend** sur `http://localhost:5173`
-
-### Option 2: Démarrage séparé
-
-**Terminal 1 - Backend :**
 ```bash
 npm run server
 ```
 
-**Terminal 2 - Frontend :**
+### Frontend
+
 ```bash
 npm run client
 ```
 
-### Vérification
+### Lancer les deux
 
-1. **Backend** : Visitez `http://localhost:3001/api/health`
-   - ✅ Doit retourner : `{"status": "OK", "message": "Server is running"}`
-   - ✅ Dans les logs : `✅ MySQL Connected successfully`
-
-2. **Frontend** : Visitez `http://localhost:5173`
-   - ✅ Page d'accueil AssuranceRenew
-
-## 🐛 Dépannage
-
-### Erreur de connexion MySQL
-
-**Problème :** `❌ MySQL connection failed: connect ECONNREFUSED 127.0.0.1:3306`
-
-**Solutions :**
-
-1. **Vérifier que MySQL est démarré**
 ```bash
-sudo systemctl status mysql
-# Si arrêté :
-sudo systemctl start mysql
+npm run dev
 ```
 
-2. **Vérifier le mot de passe dans .env**
-```bash
-# Tester la connexion
-mysql -u root -p
-```
+## 🔍 Vérification
 
-3. **Vérifier le port MySQL**
-```sql
-SHOW VARIABLES WHERE Variable_name = 'port';
-```
-
-4. **Redémarrer MySQL si nécessaire**
-```bash
-sudo systemctl restart mysql
-```
-
-### Port déjà utilisé
-```bash
-# Trouver le processus utilisant le port
-lsof -i :3001
-lsof -i :5173
-
-# Tuer le processus si nécessaire
-kill -9 <PID>
-```
-
-### Problème de permissions sur les uploads
-```bash
-chmod 755 server/uploads
-chmod 755 server/uploads/certificates
-```
+- Backend : http://localhost:3001/api/health
+- Frontend : http://localhost:5173
 
 ## 📁 Structure du projet
 
 ```
 insurance-renewal-platform/
-├── src/                          # Frontend React
-│   ├── components/               # Composants réutilisables
-│   ├── contexts/                 # Contextes React (Auth, etc.)
-│   ├── lib/                      # Utilitaires et API client
-│   ├── pages/                    # Pages de l'application
-│   │   ├── auth/                 # Pages d'authentification
-│   │   ├── client/               # Pages client
-│   │   ├── insurer/              # Pages assureur
-│   │   └── admin/                # Pages admin
-│   └── types/                    # Types TypeScript
-├── server/                       # Backend Node.js
-│   ├── config/                   # Configuration (DB, etc.)
-│   ├── middleware/               # Middlewares Express
-│   ├── routes/                   # Routes API
-│   └── uploads/                  # Fichiers uploadés
-├── supabase/migrations/          # Schéma de base de données
-└── public/                       # Assets statiques
+├── server/
+│   ├── config/
+│   ├── middleware/
+│   ├── routes/
+│   └── uploads/
+├── src/
+│   ├── components/
+│   ├── pages/
+│   ├── contexts/
+│   └── lib/
+├── supabase/migrations/
+├── docker-compose.mysql.yml
+└── .env
 ```
 
 ## 📚 API Documentation
 
-### Authentification
-- `POST /api/auth/register` - Inscription
-- `POST /api/auth/login` - Connexion
-- `GET /api/auth/me` - Profil utilisateur
+### Auth
+- POST /api/auth/register
+- POST /api/auth/login
+- GET /api/auth/me
 
 ### Client
-- `POST /api/client/requests` - Créer une demande
-- `GET /api/client/requests` - Liste des demandes
-- `GET /api/client/requests/:id` - Détail d'une demande
-- `GET /api/client/dashboard` - Statistiques client
+- POST /api/client/requests
+- GET /api/client/requests
+- GET /api/client/requests/:id
+- GET /api/client/dashboard
 
 ### Assureur
-- `GET /api/insurer/requests` - Demandes assignées
-- `PUT /api/insurer/requests/:id/status` - Mettre à jour le statut
-- `POST /api/insurer/requests/:id/certificate` - Upload attestation
-- `GET /api/insurer/dashboard` - Statistiques assureur
+- GET /api/insurer/requests
+- PUT /api/insurer/requests/:id/status
+- POST /api/insurer/requests/:id/certificate
+- GET /api/insurer/dashboard
 
 ### Admin
-- `GET /api/admin/dashboard` - Statistiques générales
-- `GET /api/admin/clients` - Liste des clients
-- `GET /api/admin/insurers` - Liste des assureurs
-- `GET /api/admin/requests` - Toutes les demandes
-- `PUT /api/admin/requests/:id/assign` - Assigner une demande
+- GET /api/admin/dashboard
+- GET /api/admin/clients
+- GET /api/admin/insurers
+- GET /api/admin/requests
+- PUT /api/admin/requests/:id/assign
 
 ### Paiement
-- `POST /api/payment/initiate` - Initier un paiement
-- `GET /api/payment/status/:id` - Statut du paiement
-- `POST /api/payment/webhook` - Webhook FedaPay
+- POST /api/payment/initiate
+- GET /api/payment/status/:id
+- POST /api/payment/webhook
 
 ## 👤 Comptes par défaut
 
-### Administrateur
-- **Email :** `admin@assurancerenew.com`
-- **Mot de passe :** `password`
+### Admin
+- Email : admin@assurancerenew.com
+- Mot de passe : password (haché via bcrypt)
 
-### Compagnies d'assurance pré-configurées
+### Assureurs par défaut
 - Allianz Bénin
-- AXA Assurances  
+- AXA Assurances
 - NSIA Assurances
 - Saham Assurance
 
-## 🔄 Workflow de fonctionnement
+## 🔄 Workflow
 
-1. **Client** crée un compte et soumet une demande avec documents
-2. **Système** calcule automatiquement les montants (base + commission)
-3. **Client** effectue le paiement via FedaPay
-4. **Admin** assigne la demande à un assureur partenaire
-5. **Assureur** traite la demande et upload l'attestation
-6. **Client** reçoit une notification et télécharge son attestation
+1. Client crée une demande
+2. Paiement via FedaPay
+3. Admin assigne à un assureur
+4. Assureur traite et envoie l'attestation
+5. Client télécharge l'attestation
 
-## 💰 Gestion des commissions
+## 💰 Commissions
 
-- Commission configurable par l'admin (défaut: 5%)
-- Calcul automatique : `Total = Montant_Base + (Montant_Base × Taux_Commission)`
-- Transparence totale pour le client
-- Suivi des revenus en temps réel
+- Commission configurable
+- Calcul automatique :
+  `total = base + (base * commission%)`
 
 ## 🔒 Sécurité
 
-- Authentification JWT
-- Hachage des mots de passe avec bcrypt
-- Validation des rôles utilisateur
-- Upload sécurisé des fichiers
-- Protection CORS configurée
+- JWT Auth
+- bcrypt password
+- Upload protégé
+- CORS activé
 
 ## 🚀 Déploiement
 
-### Production
-1. Configurer les variables d'environnement de production
-2. Build du frontend : `npm run build`
-3. Déployer sur votre serveur avec PM2 ou Docker
+```bash
+docker-compose -f docker-compose.mysql.yml up -d
+npm run build
+```
 
-### Variables d'environnement de production
+Fichier `.env` production :
+
 ```env
 NODE_ENV=production
-DB_HOST=your_production_db_host
-JWT_SECRET=your_super_secure_jwt_secret
-FEDAPAY_PUBLIC_KEY=your_production_fedapay_key
-FEDAPAY_SECRET_KEY=your_production_fedapay_secret
+DB_HOST=mysql
+DB_PORT=3306
+JWT_SECRET=super_secure_token
 ```
 
 ## 📞 Support
 
-Pour toute question ou problème :
-- Email : support@assurancerenew.com
-- Documentation API : `http://localhost:3001/api/health`
+- support@assurancerenew.com
+- http://localhost:3001/api/health
 
 ## 📄 Licence
 
-Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.
-
----
-
-**Développé avec ❤️ pour simplifier le renouvellement d'assurance automobile**
+Projet sous licence MIT.
